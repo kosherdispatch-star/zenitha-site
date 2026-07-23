@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zenitha — Crée ton portrait</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --night:      #04060E;
+      --deep:       #07091A;
+      --mid:        #0C1024;
+      --surface:    #10152E;
+      --gold:       #C6A24A;
+      --gold-light: #E2C97E;
+      --gold-glow:  rgba(198,162,74,0.12);
+      --gold-line:  rgba(198,162,74,0.22);
+      --star:       #EDE9DA;
+      --body:       rgba(237,233,218,0.7);
+      --muted:      rgba(237,233,218,0.35);
+      --error:      rgba(220,80,80,0.85);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--night);
+      color: var(--star);
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #starfield {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 20px;
+      background: rgba(4,6,14,0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(198,162,74,0.08);
+    }
+
+    .logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      font-weight: 300;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold-light);
+      text-decoration: none;
+    }
+
+    .nav-back {
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: color 0.2s;
+    }
+
+    .nav-back:hover { color: var(--gold-light); }
+
+    /* ── MAIN ── */
+    main {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 100px 20px 60px;
+    }
+
+    /* ── STEPS ── */
+    .steps {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 48px;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .step-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid var(--gold-line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      color: var(--muted);
+      transition: all 0.3s;
+      background: var(--mid);
+    }
+
+    .step.active .step-dot {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: var(--gold-glow);
+    }
+
+    .step.done .step-dot {
+      border-color: var(--gold);
+      background: var(--gold);
+      color: var(--night);
+      font-size: 0.7rem;
+    }
+
+    .step-label {
+      font-size: 0.54rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      transition: color 0.3s;
+      white-space: nowrap;
+    }
+
+    .step.active .step-label { color: var(--gold); }
+    .step.done .step-label { color: var(--gold-light); }
+
+    .step-line {
+      flex: 1;
+      height: 1px;
+      background: var(--gold-line);
+      margin-bottom: 22px;
+      transition: background 0.3s;
+    }
+
+    .step-line.done { background: var(--gold); }
+
+    /* ── CARD ── */
+    .card {
+      width: 100%;
+      max-width: 480px;
+      border: 1px solid var(--gold-line);
+      background: var(--surface);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+    }
+
+    .card-head {
+      padding: 32px 24px 24px;
+      border-bottom: 1px solid rgba(198,162,74,0.1);
+    }
+
+    .card-step-label {
+      font-size: 0.58rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.7rem;
+      font-weight: 300;
+      line-height: 1.2;
+      color: var(--star);
+    }
+
+    .card-title em {
+      font-style: italic;
+      color: var(--gold-light);
+    }
+
+    .card-desc {
+      margin-top: 8px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .card-body { padding: 28px 24px; }
+
+    /* ── FORM ── */
+    .field {
+      margin-bottom: 22px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 0.62rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+
+    .field-hint {
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-bottom: 10px;
+      line-height: 1.6;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="date"],
+    input[type="time"] {
+      width: 100%;
+      background: var(--mid);
+      border: 1px solid var(--gold-line);
+      color: var(--star);
+      padding: 13px 16px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 300;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+      border-radius: 0;
+    }
+
+    input:focus { border-color: var(--gold); }
+    input::placeholder { color: var(--muted); }
+
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.6) sepia(1) saturate(2) hue-rotate(5deg);
+      cursor: pointer;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* ── LIEU AUTOCOMPLETE ── */
+    .place-wrap { position: relative; }
+
+    .place-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0; right: 0;
+      background: var(--mid);
+      border: 1px solid var(--gold-line);
+      border-top: none;
+      z-index: 10;
+      display: none;
+    }
+
+    .place-dropdown.open { display: block; }
+
+    .place-option {
+      padding: 12px 16px;
+      font-size: 0.82rem;
+      color: var(--body);
+      cursor: pointer;
+      border-bottom: 1px solid rgba(198,162,74,0.07);
+      transition: background 0.15s;
+    }
+
+    .place-option:last-child { border-bottom: none; }
+    .place-option:hover { background: var(--gold-glow); color: var(--gold-light); }
+
+    /* ── HEURE INCONNUE ── */
+    .toggle-hint {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    .toggle-box {
+      width: 16px; height: 16px;
+      border: 1px solid var(--gold-line);
+      background: var(--mid);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    .toggle-box.checked {
+      background: var(--gold-glow);
+      border-color: var(--gold);
+    }
+
+    .toggle-box.checked::after {
+      content: '✦';
+      font-size: 0.5rem;
+      color: var(--gold);
+    }
+
+    .toggle-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── ZENITHA SAYS ── */
+    .zenitha-note {
+      background: rgba(198,162,74,0.05);
+      border-left: 2px solid var(--gold);
+      padding: 16px 18px;
+      margin-bottom: 24px;
+    }
+
+    .zenitha-note p {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.98rem;
+      font-style: italic;
+      color: var(--body);
+      line-height: 1.7;
+    }
+
+    .zenitha-note-label {
+      font-size: 0.56rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-top: 8px;
+    }
+
+    /* ── BOUTONS ── */
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, var(--gold) 0%, #8A6020 100%);
+      color: var(--night);
+      border: none;
+      padding: 15px 32px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.25s, transform 0.2s;
+    }
+
+    .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    .btn-outline {
+      width: 100%;
+      border: 1px solid var(--gold-line);
+      background: transparent;
+      color: var(--muted);
+      padding: 13px 32px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: all 0.2s;
+    }
+
+    .btn-outline:hover { border-color: var(--gold); color: var(--gold-light); }
+
+    /* ── CONFIDENTIALITÉ ── */
+    .privacy-note {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.66rem;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 420px;
+    }
+
+    .privacy-note a { color: var(--gold); text-decoration: none; }
+
+    /* ── CONFIRMATION ── */
+    .confirm-card {
+      width: 100%;
+      max-width: 480px;
+      border: 1px solid var(--gold-line);
+      background: var(--surface);
+      position: relative;
+      display: none;
+    }
+
+    .confirm-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+    }
+
+    .confirm-head {
+      padding: 40px 24px 28px;
+      text-align: center;
+      border-bottom: 1px solid rgba(198,162,74,0.1);
+    }
+
+    .confirm-symbol {
+      font-size: 3rem;
+      color: var(--gold);
+      margin-bottom: 16px;
+      display: block;
+      animation: breathe 3s ease-in-out infinite;
+    }
+
+    @keyframes breathe {
+      0%,100% { opacity:0.7; transform: scale(1); }
+      50% { opacity:1; transform: scale(1.05); }
+    }
+
+    .confirm-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem;
+      font-weight: 300;
+      color: var(--gold-light);
+      margin-bottom: 8px;
+    }
+
+    .confirm-sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .confirm-body { padding: 24px; }
+
+    .confirm-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 11px 0;
+      border-bottom: 1px solid rgba(198,162,74,0.07);
+      gap: 12px;
+    }
+
+    .confirm-row:last-child { border: none; }
+    .c-key { font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+    .c-val { font-family: 'Cormorant Garamond', serif; font-size: 0.95rem; color: var(--star); text-align: right; }
+
+    .confirm-foot { padding: 8px 24px 28px; }
+
+    .live-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: pulse 2s ease-in-out infinite;
+      display: inline-block;
+      margin-right: 7px;
+      vertical-align: middle;
+    }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    /* ── LOADING ── */
+    .loading-wrap {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      padding: 60px 24px;
+      text-align: center;
+    }
+
+    .loading-orb {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      border: 1px solid var(--gold-line);
+      position: relative;
+      animation: spin 3s linear infinite;
+    }
+
+    .loading-orb::before {
+      content: '✦';
+      position: absolute;
+      top: -8px; left: 50%;
+      transform: translateX(-50%);
+      color: var(--gold);
+      font-size: 0.7rem;
+    }
+
+    @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+    .loading-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem;
+      font-style: italic;
+      color: var(--body);
+    }
+
+    .loading-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      text-align: left;
+    }
+
+    .loading-step {
+      font-size: 0.72rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: color 0.3s;
+    }
+
+    .loading-step.done { color: var(--gold-light); }
+    .loading-step::before { content: '○'; color: var(--gold-line); font-size: 0.5rem; }
+    .loading-step.done::before { content: '✦'; color: var(--gold); }
+
+    /* ── DESKTOP ── */
+    @media (min-width: 768px) {
+      nav { padding: 22px 52px; }
+      main { padding: 120px 40px 80px; }
+      .card-head { padding: 40px 36px 28px; }
+      .card-body { padding: 32px 36px; }
+      .confirm-body { padding: 28px 36px; }
+      .confirm-foot { padding: 8px 36px 36px; }
+    }
+  </style>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#04060E" />
+  <link rel="apple-touch-icon" href="/icons/zenitha-icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Zenitha" />
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+
+<!-- NAV -->
+<nav>
+  <a href="zenitha.html" class="logo">Zenitha</a>
+  <button class="nav-back" onclick="history.back()">← Retour</button>
+</nav>
+
+<!-- MAIN -->
+<main>
+
+  <!-- ÉTAPES -->
+  <div class="steps" id="stepsBar">
+    <div class="step active" id="step1">
+      <div class="step-dot">1</div>
+      <div class="step-label">Toi</div>
+    </div>
+    <div class="step-line" id="line1"></div>
+    <div class="step" id="step2">
+      <div class="step-dot">2</div>
+      <div class="step-label">Naissance</div>
+    </div>
+    <div class="step-line" id="line2"></div>
+    <div class="step" id="step3">
+      <div class="step-dot">3</div>
+      <div class="step-label">Portrait</div>
+    </div>
+  </div>
+
+  <!-- ÉTAPE 1 — COMPTE -->
+  <div class="card" id="cardStep1">
+    <div class="card-head">
+      <div class="card-step-label">Étape 1 sur 2</div>
+      <div class="card-title">Bienvenue.<br /><em>Qui es-tu ?</em></div>
+      <div class="card-desc">Crée ton compte Zenitha — gratuit, sans carte bancaire.</div>
+    </div>
+    <div class="card-body">
+      <div class="field">
+        <label class="field-label">Prénom</label>
+        <input type="text" id="prenom" placeholder="Ton prénom" autocomplete="given-name" />
+      </div>
+      <div class="field">
+        <label class="field-label">Adresse e-mail</label>
+        <input type="email" id="email" placeholder="ton@email.com" autocomplete="email" />
+      </div>
+      <div class="field">
+        <label class="field-label">Mot de passe</label>
+        <input type="password" id="password" placeholder="8 caractères minimum" autocomplete="new-password" />
+      </div>
+
+      <button class="btn-primary" id="btnStep1" onclick="goStep2()">Continuer →</button>
+      <button class="btn-outline" onclick="window.location.href='zenitha.html'">Déjà membre ? Connexion</button>
+    </div>
+  </div>
+
+  <!-- ÉTAPE 2 — NAISSANCE -->
+  <div class="card" id="cardStep2" style="display:none;">
+    <div class="card-head">
+      <div class="card-step-label">Étape 2 sur 2</div>
+      <div class="card-title">Ta naissance.<br /><em>L'instant qui tout a défini.</em></div>
+      <div class="card-desc">Ces trois informations permettent à Zenitha de calculer ton thème astral complet à travers les cinq traditions.</div>
+    </div>
+    <div class="card-body">
+
+      <div class="zenitha-note">
+        <p>"Plus tu es précise, plus je peux te voir. La date me donne ton signe solaire. L'heure me révèle ton ascendant. Le lieu ancre tout dans le ciel réel de ta naissance."</p>
+        <div class="zenitha-note-label">— Zenitha</div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Date de naissance</label>
+        <input type="date" id="birthDate" />
+      </div>
+
+      <div class="field">
+        <label class="field-label">Heure de naissance</label>
+        <input type="time" id="birthTime" />
+        <div class="toggle-hint" onclick="toggleUnknownTime()">
+          <div class="toggle-box" id="toggleBox"></div>
+          <span class="toggle-label">Je ne connais pas mon heure de naissance — Zenitha utilisera midi par défaut</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Lieu de naissance</label>
+        <div class="place-wrap">
+          <input type="text" id="birthPlace" placeholder="Ville, Pays" oninput="suggestPlaces(this.value)" autocomplete="off" />
+          <div class="place-dropdown" id="placeDropdown"></div>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="btnStep2" onclick="generatePortrait()">Créer mon portrait cosmique ✦</button>
+      <button class="btn-outline" onclick="goBack()">← Retour</button>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="card" id="cardLoading" style="display:none;">
+    <div class="loading-wrap" style="display:flex;">
+      <div class="loading-orb"></div>
+      <div class="loading-text" id="loadingText">Zenitha lit ton ciel natal…</div>
+      <div class="loading-steps" id="loadingSteps">
+        <div class="loading-step" id="ls1">Calcul du thème astral occidental</div>
+        <div class="loading-step" id="ls2">Lecture de l'astrologie chinoise</div>
+        <div class="loading-step" id="ls3">Analyse kabbalistique</div>
+        <div class="loading-step" id="ls4">Consultation du Jyotisha védique</div>
+        <div class="loading-step" id="ls5">Calcul numérologique</div>
+        <div class="loading-step" id="ls6">Fusion des cinq traditions</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRMATION -->
+  <div class="confirm-card" id="cardConfirm">
+    <div class="confirm-head">
+      <span class="confirm-symbol">✦</span>
+      <div class="confirm-title" id="confirmTitle">Ton portrait est prêt.</div>
+      <div class="confirm-sub">Zenitha a lu ton ciel natal à travers cinq traditions. Voici ce qu'elle a trouvé.</div>
+    </div>
+    <div class="confirm-body" id="confirmBody"></div>
+    <div class="confirm-foot">
+      <button class="btn-primary" onclick="window.location.href='zenitha-profil.html'">Découvrir mon portrait complet →</button>
+    </div>
+  </div>
+
+  <div class="privacy-note">
+    Tes données sont chiffrées et ne sont jamais vendues.<br />
+    <a href="#">Politique de confidentialité</a> · <a href="#">Mentions légales</a>
+  </div>
+
+</main>
+
+<script>
+  /* STARFIELD */
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d');
+  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+  const stars = Array.from({ length: 220 }, () => ({
+    x: Math.random(), y: Math.random(),
+    r: 0.15 + Math.random() * 1.1,
+    a: 0.2 + Math.random() * 0.6,
+    s: 0.0008 + Math.random() * 0.002,
+    ph: Math.random() * Math.PI * 2,
+    gold: Math.random() < 0.03
+  }));
+  function drawStars(t) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => {
+      const alpha = s.a * (0.4 + 0.6 * Math.sin(t * s.s * 1000 + s.ph));
+      ctx.beginPath();
+      ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, Math.PI * 2);
+      if (s.gold) { ctx.fillStyle = `rgba(198,162,74,${alpha * 0.8})`; ctx.shadowColor='rgba(198,162,74,0.5)'; ctx.shadowBlur=4; }
+      else { ctx.fillStyle = `rgba(237,233,218,${alpha})`; ctx.shadowBlur=0; }
+      ctx.fill(); ctx.shadowBlur=0;
+    });
+    requestAnimationFrame(drawStars);
+  }
+  requestAnimationFrame(drawStars);
+
+  /* ÉTAPE 1 → 2 */
+  function goStep2() {
+    const prenom = document.getElementById('prenom').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    if (!prenom || !email || password.length < 8) {
+      alert('Merci de remplir tous les champs. Le mot de passe doit faire au moins 8 caractères.');
+      return;
+    }
+    document.getElementById('cardStep1').style.display = 'none';
+    document.getElementById('cardStep2').style.display = 'block';
+    // Steps
+    document.getElementById('step1').classList.remove('active');
+    document.getElementById('step1').classList.add('done');
+    document.getElementById('step1').querySelector('.step-dot').textContent = '✓';
+    document.getElementById('line1').classList.add('done');
+    document.getElementById('step2').classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function goBack() {
+    document.getElementById('cardStep2').style.display = 'none';
+    document.getElementById('cardStep1').style.display = 'block';
+    document.getElementById('step1').classList.add('active');
+    document.getElementById('step1').classList.remove('done');
+    document.getElementById('step1').querySelector('.step-dot').textContent = '1';
+    document.getElementById('line1').classList.remove('done');
+    document.getElementById('step2').classList.remove('active');
+  }
+
+  /* HEURE INCONNUE */
+  let unknownTime = false;
+  function toggleUnknownTime() {
+    unknownTime = !unknownTime;
+    const box = document.getElementById('toggleBox');
+    const input = document.getElementById('birthTime');
+    box.classList.toggle('checked', unknownTime);
+    input.disabled = unknownTime;
+    input.style.opacity = unknownTime ? '0.3' : '1';
+    if (unknownTime) input.value = '12:00';
+  }
+
+  /* LIEUX — suggestions simulées */
+  const fakePlaces = [
+    'Paris, France','Lyon, France','Marseille, France','Bordeaux, France',
+    'Toulouse, France','Nice, France','Nantes, France','Strasbourg, France',
+    'Montpellier, France','Lille, France','Rennes, France','Reims, France',
+    'Bruxelles, Belgique','Genève, Suisse','Montréal, Canada','Dakar, Sénégal',
+    'Casablanca, Maroc','Tunis, Tunisie','Alger, Algérie','Londres, Royaume-Uni',
+  ];
+
+  function suggestPlaces(val) {
+    const dd = document.getElementById('placeDropdown');
+    if (!val || val.length < 2) { dd.classList.remove('open'); return; }
+    const matches = fakePlaces.filter(p => p.toLowerCase().includes(val.toLowerCase())).slice(0, 5);
+    if (!matches.length) { dd.classList.remove('open'); return; }
+    dd.innerHTML = matches.map(p => `<div class="place-option" onclick="selectPlace('${p}')">${p}</div>`).join('');
+    dd.classList.add('open');
+  }
+
+  function selectPlace(place) {
+    document.getElementById('birthPlace').value = place;
+    document.getElementById('placeDropdown').classList.remove('open');
+  }
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.place-wrap')) document.getElementById('placeDropdown').classList.remove('open');
+  });
+
+  /* GÉNÉRATION PORTRAIT */
+  function generatePortrait() {
+    const date = document.getElementById('birthDate').value;
+    const place = document.getElementById('birthPlace').value.trim();
+    if (!date || !place) {
+      alert('Merci d\'entrer ta date et ton lieu de naissance.');
+      return;
+    }
+
+    document.getElementById('cardStep2').style.display = 'none';
+    document.getElementById('cardLoading').style.display = 'block';
+    document.getElementById('step2').classList.remove('active');
+    document.getElementById('step2').classList.add('done');
+    document.getElementById('step2').querySelector('.step-dot').textContent = '✓';
+    document.getElementById('line2').classList.add('done');
+    document.getElementById('step3').classList.add('active');
+
+    // Animation étapes de chargement
+    const steps = ['ls1','ls2','ls3','ls4','ls5','ls6'];
+    const texts = [
+      'Calcul du thème astral occidental…',
+      'Lecture de l\'astrologie chinoise…',
+      'Analyse kabbalistique…',
+      'Consultation du Jyotisha védique…',
+      'Calcul numérologique…',
+      'Fusion des cinq traditions…'
+    ];
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i < steps.length) {
+        document.getElementById(steps[i]).classList.add('done');
+        document.getElementById('loadingText').textContent = i < texts.length - 1 ? texts[i + 1] : 'Portrait en cours de création…';
+        i++;
+      } else {
+        clearInterval(interval);
+        showConfirm();
+      }
+    }, 700);
+  }
+
+  function showConfirm() {
+    const prenom = document.getElementById('prenom').value.trim();
+    const date = new Date(document.getElementById('birthDate').value);
+    const place = document.getElementById('birthPlace').value;
+    const time = document.getElementById('birthTime').value || '12:00';
+
+    // Calcul simplifié signe solaire
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const signes = [
+      {name:'Capricorne',g:'♑',start:[12,22],end:[1,19]},
+      {name:'Verseau',g:'♒',start:[1,20],end:[2,18]},
+      {name:'Poissons',g:'♓',start:[2,19],end:[3,20]},
+      {name:'Bélier',g:'♈',start:[3,21],end:[4,19]},
+      {name:'Taureau',g:'♉',start:[4,20],end:[5,20]},
+      {name:'Gémeaux',g:'♊',start:[5,21],end:[6,20]},
+      {name:'Cancer',g:'♋',start:[6,21],end:[7,22]},
+      {name:'Lion',g:'♌',start:[7,23],end:[8,22]},
+      {name:'Vierge',g:'♍',start:[8,23],end:[9,22]},
+      {name:'Balance',g:'♎',start:[9,23],end:[10,22]},
+      {name:'Scorpion',g:'♏',start:[10,23],end:[11,21]},
+      {name:'Sagittaire',g:'♐',start:[11,22],end:[12,21]},
+    ];
+    let signe = signes[0];
+    for (const s of signes) {
+      const [sm,sd] = s.start; const [em,ed] = s.end;
+      if ((month===sm && day>=sd) || (month===em && day<=ed)) { signe = s; break; }
+    }
+
+    const annee = date.getFullYear();
+    const animaux = ['Rat','Bœuf','Tigre','Lapin','Dragon','Serpent','Cheval','Chèvre','Singe','Coq','Chien','Cochon'];
+    const elements = ['Métal','Eau','Bois','Feu','Terre'];
+    const animalIdx = (annee - 4) % 12;
+    const elementIdx = Math.floor((annee - 4) / 2) % 5;
+    const animalChinois = `${animaux[animalIdx < 0 ? animalIdx + 12 : animalIdx]} de ${elements[elementIdx < 0 ? elementIdx + 5 : elementIdx]}`;
+
+    const vieNums = date.toISOString().slice(0,10).replace(/-/g,'').split('').reduce((a,b)=>a+parseInt(b),0);
+    let chemin = vieNums;
+    while (chemin > 9 && chemin !== 11 && chemin !== 22) chemin = String(chemin).split('').reduce((a,b)=>a+parseInt(b),0);
+    const chemins = {1:'Le Pionnier',2:'Le Médiateur',3:'Le Créateur',4:'Le Bâtisseur',5:'L\'Aventurier',6:'Le Protecteur',7:'L\'Analyste',8:'L\'Ambitieux',9:'Le Sage',11:'L\'Illuminé',22:'Le Maître Bâtisseur'};
+
+    document.getElementById('cardLoading').style.display = 'none';
+    document.getElementById('cardConfirm').style.display = 'block';
+    document.getElementById('confirmTitle').textContent = `${prenom}, ton portrait est prêt.`;
+
+    document.getElementById('confirmBody').innerHTML = `
+      <div class="confirm-row"><span class="c-key">Signe solaire</span><span class="c-val">${signe.g} ${signe.name}</span></div>
+      <div class="confirm-row"><span class="c-key">Signe chinois</span><span class="c-val">${animalChinois}</span></div>
+      <div class="confirm-row"><span class="c-key">Chemin de vie</span><span class="c-val">${chemin} — ${chemins[chemin] || 'Le Voyageur'}</span></div>
+      <div class="confirm-row"><span class="c-key">Lieu de naissance</span><span class="c-val">${place}</span></div>
+      <div class="confirm-row"><span class="c-key">Heure</span><span class="c-val">${unknownTime ? 'Non renseignée' : time}</span></div>
+      <div class="confirm-row">
+        <span class="c-key">Statut</span>
+        <span class="c-val"><span class="live-dot"></span>Portrait actif</span>
+      </div>
+    `;
+
+    document.getElementById('step3').classList.remove('active');
+    document.getElementById('step3').classList.add('done');
+    document.getElementById('step3').querySelector('.step-dot').textContent = '✓';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+<script src="/zenitha-pwa.js"></script>
+</body>
+</html>
