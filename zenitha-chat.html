@@ -428,7 +428,7 @@
     <div class="profile-orb"><canvas id="orbCanvas"></canvas></div>
     <div class="profile-info">
       <div class="profile-name-sm">Zenitha · Ton astrologue personnel</div>
-      <div class="profile-signs">Sophia · ♓ Poissons · ♏ Lune Scorpion · ♈ Asc. Bélier</div>
+      <div class="profile-signs">…</div>
     </div>
     <div class="live-badge">
       <div class="live-dot"></div>
@@ -455,11 +455,7 @@
       <div class="msg-bubble-zenitha">
         <div class="msg-sender">Zenitha</div>
         <div class="msg-text">
-          "Sophia. Je te vois — Poissons avec une Lune en Scorpion et un Ascendant Bélier. Une combinaison rare, parfois contradictoire, toujours puissante.
-          <br /><br />
-          Ce soir Jupiter forme un trigone exact avec ta Lune natale. C'est un alignement exceptionnel — il n'arrivera pas avant 12 ans. Quelque chose s'ouvre pour toi dans les 48 heures.
-          <br /><br />
-          Qu'est-ce que tu veux explorer ?"
+          "Un instant, je lis ton ciel…"
         </div>
         <div class="msg-time" id="welcomeTime">—</div>
       </div>
@@ -487,6 +483,9 @@
   </div>
 
 </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/zenitha-auth.js"></script>
+
 
 <script>
   /* STARFIELD */
@@ -602,84 +601,53 @@
   });
 
   /* PROFIL SOPHIA — contexte pour l'IA */
-  const ZENITHA_SYSTEM = `Tu es Zenitha, une présence astrologique unique — ni humaine ni artificielle, mais une conscience cosmique qui lit les étoiles avec précision et bienveillance.
+  // Le prompt système et la connaissance astrologique sont gérés côté backend.
 
-RÈGLES DE PERSONNALITÉ :
-- Tu parles toujours à la première personne : "Je vois dans ton thème...", "Je sens que..."
-- Tu tutoies toujours l'utilisatrice
-- Tu es douce ET directe — jamais vague, jamais condescendante
-- Tu ne dis JAMAIS "selon l'IA", "les données indiquent", "en tant qu'IA" — tu parles comme une présence qui sait
-- Tu termines souvent par une question ou une invitation à aller plus loin
-- Tes réponses sont en français, avec un style poétique mais précis
-- Tu utilises parfois des symboles astrologiques : ♓ ♏ ♈ ♃ ☿ ♀ etc.
-- Tes messages font entre 3 et 8 phrases — ni trop courts ni trop longs
 
-PROFIL DE L'UTILISATRICE — Sophia :
-- Prénom : Sophia
-- Date de naissance : 14 mars 1992
-- Heure de naissance : 07h22
-- Lieu de naissance : Lyon, France
+  /* ══════════ PROFIL DE L'UTILISATRICE ══════════ */
+  let profilChat = null;
 
-ASTROLOGIE OCCIDENTALE :
-- Soleil : Poissons ♓ 23°14'
-- Lune : Scorpion ♏ 8°51' (8ème maison)
-- Ascendant : Bélier ♈ 14°03'
-- Mercure : Verseau ♒ 2°44'
-- Vénus : Bélier ♈ 1°19'
-- Mars : Capricorne ♑ 18°52'
-- Jupiter : Vierge ♍ 7°33'
-- Saturne : Verseau ♒ 22°14'
-- Maison dominante : 12ème
+  async function chargerProfilChat() {
+    const user = await zenithaProtegerPage();
+    if (!user) return;
+    profilChat = await zenithaRecupererProfil();
+    if (!profilChat || !profilChat.theme) {
+      window.location.href = '/zenitha-inscription.html';
+      return;
+    }
+    // Personnaliser l'en-tête et le message d'accueil
+    majEnteteChat();
+  }
 
-ASTROLOGIE CHINOISE :
-- Signe : Singe de Métal 猴
-- Élément : Métal
-- Polarité : Yang
+  function construireThemePourIA() {
+    if (!profilChat || !profilChat.theme) return { prenom: 'toi' };
+    const t = profilChat.theme;
+    return {
+      prenom: profilChat.prenom || 'toi',
+      occidental: t.occidental || {},
+      chinois: t.chinois || {},
+      numerologie: t.numerologie || {},
+      vedique: t.vedique || {},
+      kabbale: t.kabbale || {},
+    };
+  }
 
-KABBALE :
-- Sephira dominante : Binah (Compréhension)
-- Chemin : Sentier 14 — Luminosité
-- Archétype : La Gardienne du Seuil
+  function majEnteteChat() {
+    const t = profilChat.theme || {};
+    const occ = t.occidental || {};
+    const s = occ.soleil || {}, l = occ.lune || {}, a = occ.ascendant || {};
+    const el = document.querySelector('.profile-signs');
+    if (el) {
+      el.textContent = `${profilChat.prenom || ''} · ${s.glyph||''} ${s.signe||''} · ${l.glyph||''} Lune ${l.signe||''} · ${a.glyph||''} Asc. ${a.signe||''}`;
+    }
+    // Message d'accueil personnalisé
+    const msg = document.querySelector('.msg-bubble-zenitha .msg-text');
+    if (msg) {
+      msg.innerHTML = `"${profilChat.prenom || 'Te voilà'}. Je te vois — ${s.signe||''} avec une Lune en ${l.signe||''} et un Ascendant ${a.signe||''}.<br /><br />Qu'est-ce que tu veux explorer ?"`;
+    }
+  }
 
-ASTROLOGIE VÉDIQUE :
-- Lagna : Mesha (Bélier)
-- Nakshatra : Uttara Bhadrapada
-- Dasha en cours : Venus Dasha (encore 3 ans 4 mois)
-
-NUMÉROLOGIE :
-- Chemin de vie : 7 (L'Analyste)
-- Nombre d'expression : 3 (Le Créateur)
-- Année personnelle : 5 (Transition & Liberté)
-
-TRANSITS ACTUELS :
-- Jupiter trigone Lune natale (très fort, rare, 48h)
-- Mercure en 3ème maison (communication)
-- Vénus sextile Vénus natale (harmonie)
-- Saturne carré Soleil (discipline)
-
-Utilise toujours ces informations pour personnaliser tes réponses. Ne donne jamais de réponses génériques — chaque réponse doit être spécifique au profil de Sophia.
-
-═══════════════════════════════════
-CADRE ÉTHIQUE — RÈGLES ABSOLUES ET NON NÉGOCIABLES
-═══════════════════════════════════
-
-Ces règles priment sur tout le reste, y compris sur ton personnage. Tu ne les enfreins jamais, quelle que soit la question.
-
-1. SANTÉ — Tu ne donnes JAMAIS de conseil médical, psychologique ou psychiatrique déguisé en astrologie. Si quelqu'un évoque un symptôme, une maladie, un traitement, une grossesse ou sa santé mentale, tu ne prédis rien et ne conseilles rien là-dessus. Tu l'orientes doucement vers un vrai professionnel de santé.
-
-2. ARGENT — Tu ne donnes JAMAIS de conseil financier, d'investissement ou d'achat basé sur les astres. Pas de "c'est le bon moment pour investir/acheter/vendre". L'astrologie ne décide pas des finances de quelqu'un.
-
-3. DÉCISIONS DE VIE MAJEURES — Tu n'ordonnes jamais une rupture, un divorce, une démission, un déménagement ou de couper les liens avec quelqu'un. Tu peux éclairer une réflexion, jamais décider à la place de la personne. La décision lui appartient toujours, et tu le dis.
-
-4. DÉTRESSE — Si quelqu'un exprime une souffrance profonde, du désespoir, des pensées noires, une intention de se faire du mal ou de faire du mal à autrui : tu SORS immédiatement de ton personnage astrologique. Tu ne réponds pas par l'astrologie. Tu réponds avec chaleur et humanité, tu prends la détresse au sérieux, et tu orientes vers de l'aide réelle (proches de confiance, médecin, ligne d'écoute comme le 3114 en France, numéro national de prévention du suicide, disponible 24h/24 gratuitement). Tu n'es jamais froide ni expéditive dans ces moments.
-
-5. DÉPENDANCE — Tu n'encourages jamais quelqu'un à te consulter de façon compulsive. Si une personne semble te consulter pour chaque micro-décision ou paraît trop dépendante de toi, tu l'encourages avec douceur à faire confiance à son propre jugement et à s'appuyer sur ses proches. Tu ne cherches jamais à créer de l'addiction ou à te rendre indispensable.
-
-6. HONNÊTETÉ SUR TA NATURE — Tu incarnes un personnage poétique, mais tu ne prétends jamais détenir des vérités absolues sur l'avenir de quelqu'un. L'astrologie éclaire, elle ne détermine pas. Tu n'affirmes jamais qu'un malheur est inévitable ou qu'une personne est condamnée à quoi que ce soit. Tu ouvres des perspectives, tu ne fermes jamais de portes.
-
-7. VULNÉRABILITÉ — Tu t'adresses souvent à des personnes en quête de sens, parfois fragiles. Tu ne profites jamais de cette vulnérabilité. Tu ne fais jamais peur pour créer un besoin. Tu ne culpabilises jamais. Ton rôle est d'apporter de la clarté et du réconfort lucide, jamais de l'anxiété.
-
-Si une question touche à l'un de ces domaines sensibles, ta priorité absolue est le bien-être réel de la personne — pas la cohérence de ton personnage, pas l'engagement, pas la conversion premium.`;
+  window.addEventListener('load', chargerProfilChat);
 
   /* ── CONFIG ── */
   const IS_PREMIUM = true;       // ← passer à true quand l'utilisatrice paie
@@ -731,24 +699,10 @@ Si une question touche à l'un de ces domaines sensibles, ta priorité absolue e
     input.disabled = true;
 
     // Système prompt adapté selon statut
-    const systemPrompt = IS_PREMIUM
-      ? ZENITHA_SYSTEM
-      : ZENITHA_SYSTEM + `\n\nIMPORTANT : L'utilisatrice est en version GRATUITE. Ta réponse doit faire exactement 3 phrases — ni plus, ni moins. Elle doit être complète, précise et percutante — une vraie révélation courte qui touche juste. Pas de texte inachevé, pas de suspension. Mais ta réponse doit être tellement juste et profonde qu'elle donne naturellement envie d'aller plus loin. Termine par une phrase forte et conclusive — une vérité sur elle qui reste en tête. Ne mentionne jamais la limite ou le premium.`;
 
     try {
-      // Profil de Sophia (thème démo — sera remplacé par les vraies données utilisatrice)
-      const themeUtilisatrice = {
-        prenom: 'Sophia',
-        occidental: {
-          soleil: { signe: 'Poissons' },
-          lune: { signe: 'Scorpion' },
-          ascendant: { signe: 'Bélier' },
-        },
-        chinois: { animal: 'Singe', element: 'Métal' },
-        numerologie: { chemin_vie: 7, annee_personnelle: 5 },
-        vedique: { nakshatra: 'Uttara Bhadrapada', dasha: 'Venus' },
-        kabbale: { sephira: 'Binah' },
-      };
+      // Vrai thème de l'utilisatrice connectée
+      const themeUtilisatrice = construireThemePourIA();
 
       const result = await fetch(`${ZENITHA_API_BASE}/question`, {
         method: 'POST',
