@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compatibilité · Zenitha</title>
+<style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --night:      #04060E;
+      --deep:       #07091A;
+      --mid:        #0C1024;
+      --surface:    #10152E;
+      --gold:       #C6A24A;
+      --gold-light: #E2C97E;
+      --gold-glow:  rgba(198,162,74,0.12);
+      --gold-line:  rgba(198,162,74,0.22);
+      --star:       #EDE9DA;
+      --body:       rgba(237,233,218,0.7);
+      --muted:      rgba(237,233,218,0.35);
+      --error:      rgba(220,80,80,0.85);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--night);
+      color: var(--star);
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #starfield {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 20px;
+      background: rgba(4,6,14,0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(198,162,74,0.08);
+    }
+
+    .logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      font-weight: 300;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold-light);
+      text-decoration: none;
+    }
+
+    .nav-back {
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: color 0.2s;
+    }
+
+    .nav-back:hover { color: var(--gold-light); }
+
+    /* ── MAIN ── */
+    main {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 100px 20px 60px;
+    }
+
+    /* ── STEPS ── */
+    .steps {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 48px;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .step-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid var(--gold-line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      color: var(--muted);
+      transition: all 0.3s;
+      background: var(--mid);
+    }
+
+    .step.active .step-dot {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: var(--gold-glow);
+    }
+
+    .step.done .step-dot {
+      border-color: var(--gold);
+      background: var(--gold);
+      color: var(--night);
+      font-size: 0.7rem;
+    }
+
+    .step-label {
+      font-size: 0.54rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      transition: color 0.3s;
+      white-space: nowrap;
+    }
+
+    .step.active .step-label { color: var(--gold); }
+    .step.done .step-label { color: var(--gold-light); }
+
+    .step-line {
+      flex: 1;
+      height: 1px;
+      background: var(--gold-line);
+      margin-bottom: 22px;
+      transition: background 0.3s;
+    }
+
+    .step-line.done { background: var(--gold); }
+
+    /* ── CARD ── */
+    .card {
+      width: 100%;
+      max-width: 480px;
+      border: 1px solid var(--gold-line);
+      background: var(--surface);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+    }
+
+    .card-head {
+      padding: 32px 24px 24px;
+      border-bottom: 1px solid rgba(198,162,74,0.1);
+    }
+
+    .card-step-label {
+      font-size: 0.58rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.7rem;
+      font-weight: 300;
+      line-height: 1.2;
+      color: var(--star);
+    }
+
+    .card-title em {
+      font-style: italic;
+      color: var(--gold-light);
+    }
+
+    .card-desc {
+      margin-top: 8px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .card-body { padding: 28px 24px; }
+
+    /* ── FORM ── */
+    .field {
+      margin-bottom: 22px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 0.62rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+
+    .field-hint {
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-bottom: 10px;
+      line-height: 1.6;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="date"],
+    input[type="time"] {
+      width: 100%;
+      background: var(--mid);
+      border: 1px solid var(--gold-line);
+      color: var(--star);
+      padding: 13px 16px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 300;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+      border-radius: 0;
+    }
+
+    input:focus { border-color: var(--gold); }
+    input::placeholder { color: var(--muted); }
+
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.6) sepia(1) saturate(2) hue-rotate(5deg);
+      cursor: pointer;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* ── LIEU AUTOCOMPLETE ── */
+    .place-wrap { position: relative; }
+
+    .place-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0; right: 0;
+      background: var(--mid);
+      border: 1px solid var(--gold-line);
+      border-top: none;
+      z-index: 10;
+      display: none;
+    }
+
+    .place-dropdown.open { display: block; }
+
+    .place-option {
+      padding: 12px 16px;
+      font-size: 0.82rem;
+      color: var(--body);
+      cursor: pointer;
+      border-bottom: 1px solid rgba(198,162,74,0.07);
+      transition: background 0.15s;
+    }
+
+    .place-option:last-child { border-bottom: none; }
+    .place-option:hover { background: var(--gold-glow); color: var(--gold-light); }
+
+    /* ── HEURE INCONNUE ── */
+    .toggle-hint {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    .toggle-box {
+      width: 16px; height: 16px;
+      border: 1px solid var(--gold-line);
+      background: var(--mid);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    .toggle-box.checked {
+      background: var(--gold-glow);
+      border-color: var(--gold);
+    }
+
+    .toggle-box.checked::after {
+      content: '✦';
+      font-size: 0.5rem;
+      color: var(--gold);
+    }
+
+    .toggle-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── ZENITHA SAYS ── */
+    .zenitha-note {
+      background: rgba(198,162,74,0.05);
+      border-left: 2px solid var(--gold);
+      padding: 16px 18px;
+      margin-bottom: 24px;
+    }
+
+    .zenitha-note p {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.98rem;
+      font-style: italic;
+      color: var(--body);
+      line-height: 1.7;
+    }
+
+    .zenitha-note-label {
+      font-size: 0.56rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-top: 8px;
+    }
+
+    /* ── BOUTON GOOGLE ── */
+    .btn-google {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: #fff;
+      color: #1f1f1f;
+      border: none;
+      padding: 14px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+
+    .btn-google:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-google:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── BOUTONS ── */
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, var(--gold) 0%, #8A6020 100%);
+      color: var(--night);
+      border: none;
+      padding: 15px 32px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.25s, transform 0.2s;
+    }
+
+    .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    .btn-outline {
+      width: 100%;
+      border: 1px solid var(--gold-line);
+      background: transparent;
+      color: var(--muted);
+      padding: 13px 32px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: all 0.2s;
+    }
+
+    .btn-outline:hover { border-color: var(--gold); color: var(--gold-light); }
+
+    /* ── CONFIDENTIALITÉ ── */
+    .privacy-note {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.66rem;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 420px;
+    }
+
+    .privacy-note a { color: var(--gold); text-decoration: none; }
+
+    /* ── CONFIRMATION ── */
+    .confirm-card {
+      width: 100%;
+      max-width: 480px;
+      border: 1px solid var(--gold-line);
+      background: var(--surface);
+      position: relative;
+      display: none;
+    }
+
+    .confirm-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+    }
+
+    .confirm-head {
+      padding: 40px 24px 28px;
+      text-align: center;
+      border-bottom: 1px solid rgba(198,162,74,0.1);
+    }
+
+    .confirm-symbol {
+      font-size: 3rem;
+      color: var(--gold);
+      margin-bottom: 16px;
+      display: block;
+      animation: breathe 3s ease-in-out infinite;
+    }
+
+    @keyframes breathe {
+      0%,100% { opacity:0.7; transform: scale(1); }
+      50% { opacity:1; transform: scale(1.05); }
+    }
+
+    .confirm-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem;
+      font-weight: 300;
+      color: var(--gold-light);
+      margin-bottom: 8px;
+    }
+
+    .confirm-sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .confirm-body { padding: 24px; }
+
+    .confirm-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 11px 0;
+      border-bottom: 1px solid rgba(198,162,74,0.07);
+      gap: 12px;
+    }
+
+    .confirm-row:last-child { border: none; }
+    .c-key { font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+    .c-val { font-family: 'Cormorant Garamond', serif; font-size: 0.95rem; color: var(--star); text-align: right; }
+
+    .confirm-foot { padding: 8px 24px 28px; }
+
+    .live-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: pulse 2s ease-in-out infinite;
+      display: inline-block;
+      margin-right: 7px;
+      vertical-align: middle;
+    }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    /* ── LOADING ── */
+    .loading-wrap {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      padding: 60px 24px;
+      text-align: center;
+    }
+
+    .loading-orb {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      border: 1px solid var(--gold-line);
+      position: relative;
+      animation: spin 3s linear infinite;
+    }
+
+    .loading-orb::before {
+      content: '✦';
+      position: absolute;
+      top: -8px; left: 50%;
+      transform: translateX(-50%);
+      color: var(--gold);
+      font-size: 0.7rem;
+    }
+
+    @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+    .loading-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem;
+      font-style: italic;
+      color: var(--body);
+    }
+
+    .loading-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      text-align: left;
+    }
+
+    .loading-step {
+      font-size: 0.72rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: color 0.3s;
+    }
+
+    .loading-step.done { color: var(--gold-light); }
+    .loading-step::before { content: '○'; color: var(--gold-line); font-size: 0.5rem; }
+    .loading-step.done::before { content: '✦'; color: var(--gold); }
+
+    /* ── DESKTOP ── */
+    @media (min-width: 768px) {
+      nav { padding: 22px 52px; }
+      main { padding: 120px 40px 80px; }
+      .card-head { padding: 40px 36px 28px; }
+      .card-body { padding: 32px 36px; }
+      .confirm-body { padding: 28px 36px; }
+      .confirm-foot { padding: 8px 36px 36px; }
+    }
+  </style>
+<style>
+  .compat-wrap { max-width: 560px; margin: 0 auto; padding: 24px 20px 80px; }
+  .compat-intro { text-align:center; color:rgba(255,255,255,.7); line-height:1.6; margin-bottom:28px; }
+  .compat-field { margin-bottom:18px; }
+  .compat-field label { display:block; font-size:.9rem; color:rgba(255,255,255,.6); margin-bottom:6px; }
+  .compat-field input { width:100%; padding:14px 16px; border-radius:12px; border:1px solid rgba(255,255,255,.15);
+    background:rgba(255,255,255,.05); color:#fff; font-size:1rem; }
+  .compat-result { margin-top:28px; padding:22px; border-radius:16px; background:rgba(255,255,255,.05);
+    line-height:1.75; white-space:pre-wrap; display:none; }
+  .compat-result.show { display:block; }
+  .compat-loading { text-align:center; color:rgba(255,255,255,.6); font-style:italic; display:none; margin-top:24px; }
+  .compat-loading.show { display:block; }
+</style>
+</head>
+<body>
+  <header class="top-bar">
+    <a href="/zenitha-profil.html" class="back-link">← Mon profil</a>
+    <span class="brand">Zenitha</span>
+  </header>
+
+  <div class="compat-wrap">
+    <h1 style="text-align:center;">Votre compatibilité</h1>
+    <p class="compat-intro">
+      Entre la date, l'heure et le lieu de naissance de la personne qui t'intéresse.
+      Zenitha croise vos deux thèmes à travers les cinq traditions et te révèle votre dynamique.
+    </p>
+
+    <div class="compat-field">
+      <label>Son prénom</label>
+      <input type="text" id="partenaireNom" placeholder="Son prénom" autocomplete="off">
+    </div>
+    <div class="compat-field">
+      <label>Sa date de naissance</label>
+      <input type="date" id="partenaireDate" min="1920-01-01" max="2015-12-31">
+    </div>
+    <div class="compat-field">
+      <label>Son heure de naissance (si tu la connais)</label>
+      <input type="time" id="partenaireHeure" value="12:00">
+    </div>
+    <div class="compat-field" style="position:relative;">
+      <label>Son lieu de naissance</label>
+      <input type="text" id="partenaireLieu" placeholder="Ville de naissance" autocomplete="off">
+      <div class="place-dropdown" id="placeDropdown"></div>
+    </div>
+
+    <button class="btn-primary" id="btnCompat" style="width:100%; margin-top:12px;">
+      Révéler notre compatibilité
+    </button>
+
+    <div class="compat-loading" id="compatLoading">Zenitha lit vos deux ciels…</div>
+    <div class="compat-result" id="compatResult"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/zenitha-auth.js"></script>
+  <script src="/zenitha-api.js"></script>
+  <script>
+  let coordPartenaire = null;
+  let timerRecherche = null;
+  let profilMoi = null;
+
+  window.addEventListener('load', async () => {
+    const user = await zenithaProtegerPage();
+    if (!user) return;
+    profilMoi = await zenithaRecupererProfil();
+    if (!profilMoi || !profilMoi.theme) {
+      window.location.href = '/zenitha-inscription.html';
+    }
+  });
+
+  // Géocodage du lieu du partenaire (Nominatim)
+  const inputLieu = document.getElementById('partenaireLieu');
+  inputLieu.addEventListener('input', () => {
+    const val = inputLieu.value.trim();
+    const dd = document.getElementById('placeDropdown');
+    coordPartenaire = null;
+    if (!val || val.length < 3) { dd.classList.remove('open'); return; }
+    clearTimeout(timerRecherche);
+    timerRecherche = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&limit=5`,
+          { headers: { 'Accept-Language': 'fr' } }
+        );
+        const villes = await res.json();
+        if (!villes.length) { dd.classList.remove('open'); return; }
+        dd.innerHTML = villes.map((v, i) =>
+          `<div class="place-option" data-idx="${i}">${v.display_name}</div>`
+        ).join('');
+        dd.classList.add('open');
+        dd.querySelectorAll('.place-option').forEach((el, i) => {
+          el.addEventListener('click', () => {
+            coordPartenaire = {
+              latitude: parseFloat(villes[i].lat),
+              longitude: parseFloat(villes[i].lon)
+            };
+            inputLieu.value = villes[i].display_name.split(',').slice(0,2).join(',');
+            dd.classList.remove('open');
+          });
+        });
+      } catch (e) { dd.classList.remove('open'); }
+    }, 400);
+  });
+
+  document.getElementById('btnCompat').addEventListener('click', async () => {
+    const nom = document.getElementById('partenaireNom').value.trim() || "l'autre";
+    const date = document.getElementById('partenaireDate').value;
+    const heureStr = document.getElementById('partenaireHeure').value || '12:00';
+
+    if (!date) { alert('Entre sa date de naissance.'); return; }
+    if (!coordPartenaire) { alert('Choisis son lieu de naissance dans la liste.'); return; }
+
+    const [annee, mois, jour] = date.split('-').map(Number);
+    const [heure, minute] = heureStr.split(':').map(Number);
+
+    document.getElementById('compatLoading').classList.add('show');
+    document.getElementById('compatResult').classList.remove('show');
+
+    try {
+      // Thème du partenaire
+      const themePartenaire = await zenithaCalculerTheme({
+        annee, mois, jour, heure, minute,
+        latitude: coordPartenaire.latitude,
+        longitude: coordPartenaire.longitude,
+        timezone: 1
+      });
+
+      // Lecture de compatibilité
+      const rep = await zenithaCompatibilite(
+        profilMoi.theme,
+        themePartenaire,
+        profilMoi.prenom || 'toi',
+        nom
+      );
+
+      document.getElementById('compatLoading').classList.remove('show');
+      const box = document.getElementById('compatResult');
+      if (rep && rep.success) {
+        box.textContent = rep.compatibilite;
+      } else {
+        box.textContent = "Zenitha n'a pas pu lire votre compatibilité pour le moment. Réessaie dans un instant.";
+      }
+      box.classList.add('show');
+    } catch (e) {
+      document.getElementById('compatLoading').classList.remove('show');
+      const box = document.getElementById('compatResult');
+      box.textContent = "Une erreur est survenue. Réessaie dans un instant.";
+      box.classList.add('show');
+    }
+  });
+  </script>
+  <script src="/zenitha-pwa.js"></script>
+</body>
+</html>
